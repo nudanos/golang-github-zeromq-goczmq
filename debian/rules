@@ -6,11 +6,20 @@ export GO111MODULE := off
 #export DH_VERBOSE=1
 export DH_GOPKG := github.com/zeromq/goczmq
 
+GOBUILDDIR := _build
+
 %:
-	dh $@ --buildsystem=golang --with golang
+	dh $@ --buildsystem=golang --with golang --builddirectory=$(GOBUILDDIR)
 
 override_dh_auto_install:
 	dh_auto_install -- --no-binaries
 
 override_dh_auto_test:
 # upstreams tests are unreliable (test bugs) ignore them for now.
+
+# NuDanOS: vet every Go package
+override_dh_auto_build: vet
+	dh_auto_build
+
+vet:
+	cd $(GOBUILDDIR)/src/$(DH_GOPKG) && GOPATH=$(CURDIR)/$(GOBUILDDIR) go vet ./...
